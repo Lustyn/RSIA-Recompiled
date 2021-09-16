@@ -1,0 +1,398 @@
+From 56728cd267a9d3a1fb83a204a59c27a022661661 Mon Sep 17 00:00:00 2001
+From: Justyn <egot@istic.pw>
+Date: Thu, 16 Sep 2021 03:14:09 -0500
+Subject: [PATCH] Fix exceptions
+
+
+diff --git a/DungeonPresenter.cs b/DungeonPresenter.cs
+index 116deb27..bbf81e3c 100644
+--- a/DungeonPresenter.cs
++++ b/DungeonPresenter.cs
+@@ -327,10 +327,10 @@ public class DungeonPresenter : ReactivePresenterBase
+ 			view.Bar_IdleProgress.value = (float)x;
+ 		}).AddTo(skillSlotDisposables[index]);
+ 		view.Bar_SummonAttack.gameObject.SetActive(false);
+-		CombatSkillModel skill2 = default(CombatSkillModel);
++		CombatSkillModel skill2 = skill;
+ 		if (skill is SummoningSkillModel)
+ 		{
+-			int index2 = default(int);
++			int index2 = index;
+ 			MessageBroker.Default.Receive<SummonUsedEvent>().DelayFrame(1).Subscribe(delegate
+ 			{
+ 				SummoningSkillModel summonSkill = skill2 as SummoningSkillModel;
+diff --git a/GameController.cs b/GameController.cs
+index 447f51f8..72b2aeb5 100644
+--- a/GameController.cs
++++ b/GameController.cs
+@@ -128,25 +128,9 @@ public class GameController
+ 
+ 	private void SyncWithServerTime()
+ 	{
+-		serverTimeComplete = false;
+-		ExecuteCloudScriptRequest executeCloudScriptRequest = new ExecuteCloudScriptRequest();
+-		executeCloudScriptRequest.FunctionName = "getServerTime";
+-		executeCloudScriptRequest.GeneratePlayStreamEvent = false;
+-		ExecuteCloudScriptRequest request = executeCloudScriptRequest;
+-		try
+-		{
+-			PlayFabClientAPI.ExecuteCloudScript(request, OnCloudGetServerTime, delegate(PlayFabError e)
+-			{
+-				Debug.LogError(e.ErrorMessage);
+-			});
+-		}
+-		catch (Exception message)
+-		{
+-			Debug.LogWarning(message);
+ 			serverTime = DateTime.UtcNow;
+ 			serverTimeComplete = true;
+ 		}
+-	}
+ 
+ 	private void OnCloudGetServerTime(ExecuteCloudScriptResult result)
+ 	{
+@@ -500,14 +484,6 @@ public class GameController
+ 		yield return new WaitForSeconds(0.75f);
+ 		SaveData.SaveToFile(SaveDataObj, serverTime, true);
+ 		MessageBroker.Default.Publish(new SaveGameEvent(SaveDataObj));
+-		foreach (StatBase oneStat in Model.Stats)
+-		{
+-			if (!string.IsNullOrEmpty(oneStat.AndroidLeaderboardId))
+-			{
+-				LeaderboardService.UpdateLeaderboards((int)oneStat.Amount.Value, oneStat.AndroidLeaderboardId, oneStat.IOSLeaderboardId);
+-				Debug.LogFormat("Trying leaderboard update for {0}: {1}", oneStat.AndroidLeaderboardId, (int)oneStat.Amount.Value);
+-			}
+-		}
+ 		yield return new WaitForSeconds(0.5f);
+ 		saving = false;
+ 		Debug.LogFormat("[SAVING] Complete");
+diff --git a/GameModel.cs b/GameModel.cs
+index 7d34106a..a5c08d20 100644
+--- a/GameModel.cs
++++ b/GameModel.cs
+@@ -634,7 +634,7 @@ public class GameModel
+ 	private IEnumerator GetAssetData<T>(List<Dictionary<string, string>> manifest, string bundlePath, Action<T> action) where T : UnityEngine.Object
+ 	{
+ 		List<IObservable<T>> observables = new List<IObservable<T>>();
+-		Action<T> action2 = default(Action<T>);
++		Action<T> action2 = action;
+ 		for (int i = 0; i < manifest.Count; i++)
+ 		{
+ 			Dictionary<string, string> record = manifest[i];
+@@ -669,7 +669,7 @@ public class GameModel
+ 	private IEnumerator GetAssetData<T>(List<AssetData> dataList, Action<T> action) where T : UnityEngine.Object
+ 	{
+ 		List<IObservable<T>> observables = new List<IObservable<T>>();
+-		Action<T> action2 = default(Action<T>);
++		Action<T> action2 = action;
+ 		for (int i = 0; i < dataList.Count; i++)
+ 		{
+ 			observables.Add(AssetManager.GetAsset<T>(dataList[i]));
+diff --git a/GearMenuPresenter.cs b/GearMenuPresenter.cs
+index c214dce9..645b5a67 100644
+--- a/GearMenuPresenter.cs
++++ b/GearMenuPresenter.cs
+@@ -148,12 +148,12 @@ public class GearMenuPresenter : ReactivePresenterBase
+ 				view.Btn_Equip.interactable = !x;
+ 				view.Btn_Click.image.sprite = ((!x) ? UneqippedItemFrame : EquippedItemFrame);
+ 			}).AddTo(view);
+-			ItemStackModel itemStack2 = default(ItemStackModel);
++			ItemStackModel itemStack2 = itemStack;
+ 			PlayerModel.IsFemale.Subscribe(delegate
+ 			{
+ 				UpdateSprite(view.Img_Item, itemStack2.Item.Image.Name).ToObservable().StartAsCoroutine();
+ 			}).AddTo(view);
+-			string itemName2 = default(string);
++			string itemName2 = itemName;
+ 			view.Btn_Equip.OnClickAsObservable().Subscribe(delegate
+ 			{
+ 				controller.EquipItem(itemName2);
+diff --git a/OfflineAccumalationPresenter.cs b/OfflineAccumalationPresenter.cs
+index e5772135..b6c2112a 100644
+--- a/OfflineAccumalationPresenter.cs
++++ b/OfflineAccumalationPresenter.cs
+@@ -132,7 +132,7 @@ public class OfflineAccumalationPresenter : ReactivePresenterBase
+ 
+ 	private IEnumerator CreateDefeatedEnemy(KeyValuePair<string, int> defeatedEnemy)
+ 	{
+-		KeyValuePair<string, int> defeatedEnemy2 = default(KeyValuePair<string, int>);
++		KeyValuePair<string, int> defeatedEnemy2 = defeatedEnemy;
+ 		EnemyData eData = model.EnemyDataList.FirstOrDefault((EnemyData x) => x.Name == defeatedEnemy2.Key);
+ 		if (!(null != eData))
+ 		{
+diff --git a/PantheonPresenter.cs b/PantheonPresenter.cs
+index 79a092c2..5c8a422e 100644
+--- a/PantheonPresenter.cs
++++ b/PantheonPresenter.cs
+@@ -131,7 +131,7 @@ public class PantheonPresenter : ReactivePresenterBase
+ 		Txt_ChapterDescription.text = chapter.Description;
+ 		Img_Icon.sprite = AssetManager.GetSprite(chapter.ChapterIcon.Name);
+ 		Txt_UnlockText.text = string.Format("Unlock {0}", chapter.ChapterName);
+-		ChapterModel chapter2 = default(ChapterModel);
++		ChapterModel chapter2 = chapter;
+ 		LockedObjects.ForEach(delegate(GameObject x)
+ 		{
+ 			x.SetActive(!chapter2.IsUnlocked.Value);
+diff --git a/PlayFab/Internal/PlayFabHTTP.cs b/PlayFab/Internal/PlayFabHTTP.cs
+index cc955f89..1d8de0fb 100644
+--- a/PlayFab/Internal/PlayFabHTTP.cs
++++ b/PlayFab/Internal/PlayFabHTTP.cs
+@@ -38,6 +38,7 @@ namespace PlayFab.Internal
+ 
+ 		public static void Post(string urlPath, string data, string authType, string authKey, Action<CallRequestContainer> callback, object request, object customData)
+ 		{
++			/*
+ 			CallRequestContainer callRequestContainer = new CallRequestContainer();
+ 			callRequestContainer.RequestType = PlayFabSettings.RequestType;
+ 			callRequestContainer.CallId = callIdGen++;
+@@ -62,6 +63,8 @@ namespace PlayFab.Internal
+ 			{
+ 				SingletonMonoBehaviour<PlayFabHTTP>.instance.StartCoroutine(SingletonMonoBehaviour<PlayFabHTTP>.instance.MakeRequestViaUnity(callRequestContainer2));
+ 			}
++			*/
++			Console.WriteLine("TODO: Implement blocked request to " + urlPath + " with data " + data);
+ 		}
+ 
+ 		private static void _ActivateWorkerThread()
+diff --git a/PlayFab/PlayFabClientAPI.cs b/PlayFab/PlayFabClientAPI.cs
+index cc5b7ba9..ccb36160 100644
+--- a/PlayFab/PlayFabClientAPI.cs
++++ b/PlayFab/PlayFabClientAPI.cs
+@@ -1,4 +1,5 @@
+ using System;
++using System.Collections.Generic;
+ using PlayFab.ClientModels;
+ using PlayFab.Internal;
+ using UnityEngine;
+@@ -689,12 +690,26 @@ namespace PlayFab
+ 			{
+ 				throw new Exception("Must be have PlayFabSettings.TitleId set to call this method");
+ 			}
++			/*
+ 			string data = SimpleJson.SerializeObject(request, Util.ApiSerializerStrategy);
+ 			Action<CallRequestContainer> callback = delegate(CallRequestContainer requestContainer)
+ 			{
+ 				ResultContainer<LoginResult>.HandleResults(requestContainer, resultCallback, errorCallback, LoginWithSteamResultAction);
+ 			};
+ 			PlayFabHTTP.Post("/Client/LoginWithSteam", data, null, null, callback, request, customData);
++			*/
++			_authKey = "auth_key";
++			resultCallback(new LoginResult
++			{
++				PlayFabId = "anonymous",
++				SessionTicket = "session_ticket",
++				NewlyCreated = true,
++				SettingsForUser = new UserSettings
++				{
++					NeedsAttribution = false
++				},
++				LastLoginTime = null
++			});
+ 		}
+ 
+ 		public static void LoginWithSteamResultAction(LoginResult result, CallRequestContainer requestContainer)
+@@ -1216,12 +1231,11 @@ namespace PlayFab
+ 			{
+ 				throw new Exception("Must be logged in to call this method");
+ 			}
+-			string data = SimpleJson.SerializeObject(request, Util.ApiSerializerStrategy);
+-			Action<CallRequestContainer> callback = delegate(CallRequestContainer requestContainer)
++			resultCallback(new GetUserDataResult
+ 			{
+-				ResultContainer<GetUserDataResult>.HandleResults(requestContainer, resultCallback, errorCallback, null);
+-			};
+-			PlayFabHTTP.Post("/Client/GetUserData", data, "X-Authorization", _authKey, callback, request, customData);
++				Data = new Dictionary<string, UserDataRecord>(),
++				DataVersion = 0u
++			});
+ 		}
+ 
+ 		public static void GetUserPublisherData(GetUserDataRequest request, ProcessApiCallback<GetUserDataResult> resultCallback, ErrorCallback errorCallback, object customData = null)
+@@ -1258,12 +1272,37 @@ namespace PlayFab
+ 			{
+ 				throw new Exception("Must be logged in to call this method");
+ 			}
++			/*
+ 			string data = SimpleJson.SerializeObject(request, Util.ApiSerializerStrategy);
+ 			Action<CallRequestContainer> callback = delegate(CallRequestContainer requestContainer)
+ 			{
+ 				ResultContainer<GetUserDataResult>.HandleResults(requestContainer, resultCallback, errorCallback, null);
+ 			};
+ 			PlayFabHTTP.Post("/Client/GetUserReadOnlyData", data, "X-Authorization", _authKey, callback, request, customData);
++			*/
++			resultCallback(new GetUserDataResult
++			{
++				Data = new Dictionary<string, UserDataRecord>
++				{
++					{
++						"store_override",
++						new UserDataRecord
++						{
++							Value = null,
++							LastUpdated = DateTime.Now
++						}
++					},
++					{
++						"assetBundleVersion2",
++						new UserDataRecord
++						{	
++							Value = null,
++							LastUpdated = DateTime.Now
++						}
++					}
++				},
++				DataVersion = 0u
++			});
+ 		}
+ 
+ 		public static void GetUserStatistics(GetUserStatisticsRequest request, ProcessApiCallback<GetUserStatisticsResult> resultCallback, ErrorCallback errorCallback, object customData = null)
+@@ -1342,12 +1381,18 @@ namespace PlayFab
+ 			{
+ 				throw new Exception("Must be logged in to call this method");
+ 			}
++			/*
+ 			string data = SimpleJson.SerializeObject(request, Util.ApiSerializerStrategy);
+ 			Action<CallRequestContainer> callback = delegate(CallRequestContainer requestContainer)
+ 			{
+ 				ResultContainer<GetCatalogItemsResult>.HandleResults(requestContainer, resultCallback, errorCallback, null);
+ 			};
+ 			PlayFabHTTP.Post("/Client/GetCatalogItems", data, "X-Authorization", _authKey, callback, request, customData);
++			*/
++			resultCallback(new GetCatalogItemsResult
++			{
++				Catalog = new List<CatalogItem>()
++			});
+ 		}
+ 
+ 		public static void GetPublisherData(GetPublisherDataRequest request, ProcessApiCallback<GetPublisherDataResult> resultCallback, ErrorCallback errorCallback, object customData = null)
+@@ -1384,12 +1429,24 @@ namespace PlayFab
+ 			{
+ 				throw new Exception("Must be logged in to call this method");
+ 			}
++			/*
+ 			string data = SimpleJson.SerializeObject(request, Util.ApiSerializerStrategy);
+ 			Action<CallRequestContainer> callback = delegate(CallRequestContainer requestContainer)
+ 			{
+ 				ResultContainer<GetTitleDataResult>.HandleResults(requestContainer, resultCallback, errorCallback, null);
+ 			};
+ 			PlayFabHTTP.Post("/Client/GetTitleData", data, "X-Authorization", _authKey, callback, request, customData);
++			*/
++			resultCallback(new GetTitleDataResult
++			{
++				Data = new Dictionary<string, string>
++				{
++					{ "manifest", "{\"0.1.9.1\":{\"Chapters\":[{\"id\":\"Chapter1\"},{\"id\":\"Chapter2\"}],\"TownSkills\":[{\"id\":\"Construction\"},{\"id\":\"Cooking\"},{\"id\":\"Crafting\"},{\"id\":\"Divination\"},{\"id\":\"Farming\"},{\"id\":\"Firemaking\"},{\"id\":\"Fishing\"},{\"id\":\"Fletching\"},{\"id\":\"Herblore\"},{\"id\":\"Hunting\"},{\"id\":\"Mining\"},{\"id\":\"Smithing\"},{\"id\":\"Woodcutting\"}],\"DungeonSkills\":[{\"id\":\"Agility\"},{\"id\":\"Attack\"},{\"id\":\"Constitution\"},{\"id\":\"Defence\"},{\"id\":\"Magic\"},{\"id\":\"Prayer\"},{\"id\":\"Ranged\"},{\"id\":\"Runecrafting\"},{\"id\":\"Slayer\"},{\"id\":\"Strength\"},{\"id\":\"Summoning\"},{\"id\":\"Thieving\"}],\"Player\":[{\"id\":\"Player\"}],\"TownAbilities\":[{\"id\":\"InspirationAbility\"},{\"id\":\"ReplenishAbility\"},{\"id\":\"HastenAbility\"},{\"id\":\"FractalAbility\"},{\"id\":\"EntwineAbility\"},{\"id\":\"SurgeAbility\"}],\"DungeonAbilities\":[{\"id\":\"WeakenEnemyAbility\"},{\"id\":\"HealAbility\"},{\"id\":\"SwiftnessAbility\"},{\"id\":\"BarrageAbility\"},{\"id\":\"StrikeAbility\"},{\"id\":\"ThornsAbility\"}],\"EnemyBuffs\":[{\"id\":\"ImmuneToAllDamage\"},{\"id\":\"Weaken\"}],\"Audio\":[{\"id\":\"AudioData\"}],\"Items\":[{\"id\":\"EmeraldBracelet\"},{\"id\":\"ExplorersRing4\"},{\"id\":\"ChaosBoots\"},{\"id\":\"BronzePlatelegs\"},{\"id\":\"ChaosBody\"},{\"id\":\"Tiara\"},{\"id\":\"RubyNecklace\"},{\"id\":\"GnomeGoggles\"},{\"id\":\"Needle\"},{\"id\":\"WhitePlateBody\"},{\"id\":\"Bronze2HSword\"},{\"id\":\"DiamondBracelet\"},{\"id\":\"ChaosHelmet\"},{\"id\":\"BronzeCrossbow\"},{\"id\":\"StaffOfAir\"},{\"id\":\"CosmicBoots\"},{\"id\":\"WhiteFullHelm\"},{\"id\":\"RubyRing\"},{\"id\":\"HardLeatherBody\"},{\"id\":\"HardLeatherShield\"},{\"id\":\"BronzeKiteshield\"},{\"id\":\"BronzePlatebody\"},{\"id\":\"DiamondRing\"},{\"id\":\"SapphireNecklace\"},{\"id\":\"SapphireRing\"},{\"id\":\"SapphireAmulet\"},{\"id\":\"HardLeatherBoots\"},{\"id\":\"CosmicShield\"},{\"id\":\"SapphireBracelet\"},{\"id\":\"RubyBracelet\"},{\"id\":\"RubyAmulet\"},{\"id\":\"EmeraldNecklace\"},{\"id\":\"BronzePickaxe\"},{\"id\":\"EmeraldRing\"},{\"id\":\"AnimaSword\"},{\"id\":\"CosmicBody\"},{\"id\":\"DiamondAmulet\"},{\"id\":\"BronzeFullHelm\"},{\"id\":\"WhitePlatelegs\"},{\"id\":\"BronzeDagger\"},{\"id\":\"WhiteLongsword\"},{\"id\":\"BronzeDefender\"},{\"id\":\"EmeraldAmulet\"},{\"id\":\"ChaosShield\"},{\"id\":\"RingOfKinship\"},{\"id\":\"BronzeHatchet\"},{\"id\":\"DiamondNecklace\"},{\"id\":\"WhiteKiteshield\"},{\"id\":\"OakShortbow\"},{\"id\":\"CosmicHelmet\"}]}}" },
++					{ "assetBundleVersion2", "release/0.1.9" },
++					{ "store", "{\"catalog\":\"catalog\",\"store\":\"store\"}" },
++					{ "min_client_version", "0.1.9" }
++				}
++			});
+ 		}
+ 
+ 		public static void GetTitleNews(GetTitleNewsRequest request, ProcessApiCallback<GetTitleNewsResult> resultCallback, ErrorCallback errorCallback, object customData = null)
+@@ -1482,12 +1539,20 @@ namespace PlayFab
+ 			{
+ 				throw new Exception("Must be logged in to call this method");
+ 			}
++			/*
+ 			string data = SimpleJson.SerializeObject(request, Util.ApiSerializerStrategy);
+ 			Action<CallRequestContainer> callback = delegate(CallRequestContainer requestContainer)
+ 			{
+ 				ResultContainer<GetUserInventoryResult>.HandleResults(requestContainer, resultCallback, errorCallback, null);
+ 			};
+ 			PlayFabHTTP.Post("/Client/GetUserInventory", data, "X-Authorization", _authKey, callback, request, customData);
++			*/
++			resultCallback(new GetUserInventoryResult
++			{
++				Inventory = new List<ItemInstance>(),
++				VirtualCurrency = new Dictionary<string, int>(),
++				VirtualCurrencyRechargeTimes = new Dictionary<string, VirtualCurrencyRechargeTime>()
++			});
+ 		}
+ 
+ 		public static void PayForPurchase(PayForPurchaseRequest request, ProcessApiCallback<PayForPurchaseResult> resultCallback, ErrorCallback errorCallback, object customData = null)
+diff --git a/UniRx/Observable.cs b/UniRx/Observable.cs
+index 02e42171..3fbbfb5a 100644
+--- a/UniRx/Observable.cs
++++ b/UniRx/Observable.cs
+@@ -1758,7 +1758,11 @@ namespace UniRx
+ 					}
+ 					finally
+ 					{
+-						//((_003CWrapEnumerator_003Ec__Iterator17)this)._003C_003E__Finally0();
++						var d = enumerator as IDisposable;
++                        if (d != null)
++                        {
++                            d.Dispose();
++                        }
+ 					}
+ 					yield break;
+ 				}
+@@ -1794,7 +1798,11 @@ namespace UniRx
+ 			}
+ 			finally
+ 			{
+-				//((_003CWrapEnumerator_003Ec__Iterator17)this)._003C_003E__Finally1();
++				var d = enumerator as IDisposable;
++                if (d != null)
++                {
++                    d.Dispose();
++                }
+ 			}
+ 		}
+ 
+@@ -1828,7 +1836,11 @@ namespace UniRx
+ 					}
+ 					finally
+ 					{
+-						//((_003CWrapEnumeratorYieldValue_003Ec__Iterator18<T>)this)._003C_003E__Finally0();
++						var d = enumerator as IDisposable;
++                        if (d != null)
++                        {
++                            d.Dispose();
++                        }
+ 					}
+ 					yield break;
+ 				}
+@@ -1875,7 +1887,11 @@ namespace UniRx
+ 			}
+ 			finally
+ 			{
+-				//((_003CWrapEnumeratorYieldValue_003Ec__Iterator18<T>)this)._003C_003E__Finally1();
++				var d = enumerator as IDisposable;
++                if (d != null)
++                {
++                    d.Dispose();
++                }
+ 			}
+ 		}
+ 
+diff --git a/UniRx/ObserveExtensions.cs b/UniRx/ObserveExtensions.cs
+index bdfe3c93..4ba27811 100644
+--- a/UniRx/ObserveExtensions.cs
++++ b/UniRx/ObserveExtensions.cs
+@@ -52,7 +52,7 @@ namespace UniRx
+ 					}
+ 					finally
+ 					{
+-						//((_003CPublishPocoValueChanged_003Ec__Iterator2C<TSource, TProperty>)this)._003C_003E__Finally0();
++						target = null;
+ 					}
+ 					if (isFirst || !comparer.Equals(currentValue, prevValue))
+ 					{
+diff --git a/UniRx/Operators/DelayFrameObservable.cs b/UniRx/Operators/DelayFrameObservable.cs
+index 5dc2e062..382d3e64 100644
+--- a/UniRx/Operators/DelayFrameObservable.cs
++++ b/UniRx/Operators/DelayFrameObservable.cs
+@@ -57,7 +57,7 @@ namespace UniRx.Operators
+ 					}
+ 					finally
+ 					{
+-						//((_003COnCompletedDelay_003Ec__Iterator2F)(object)this)._003C_003E__Finally0();
++						Dispose();
+ 					}
+ 				}
+ 			}
+-- 
+2.18.0.windows.1
+

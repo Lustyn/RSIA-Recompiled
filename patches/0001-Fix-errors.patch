@@ -1,0 +1,219 @@
+From 2d15324f85aa6dcffe23d36c9355b08ccff298fc Mon Sep 17 00:00:00 2001
+From: Justyn <egot@istic.pw>
+Date: Wed, 15 Sep 2021 23:33:42 -0500
+Subject: [PATCH] Fix errors
+
+
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 00000000..cbbd0b5c
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,2 @@
++bin/
++obj/
+\ No newline at end of file
+diff --git a/TMPro/TMP_InputField.cs b/TMPro/TMP_InputField.cs
+index 288edbd8..dade95fd 100644
+--- a/TMPro/TMP_InputField.cs
++++ b/TMPro/TMP_InputField.cs
+@@ -2113,15 +2113,5 @@ namespace TMPro
+ 			}
+ 			base.DoStateTransition(state, instant);
+ 		}
+-
+-		virtual Transform ICanvasElement.get_transform()
+-		{
+-			return base.transform;
+-		}
+-
+-		virtual bool ICanvasElement.IsDestroyed()
+-		{
+-			return IsDestroyed();
+-		}
+ 	}
+ }
+diff --git a/TMPro/TMP_SubMeshUI.cs b/TMPro/TMP_SubMeshUI.cs
+index 991c6c2a..d85adb05 100644
+--- a/TMPro/TMP_SubMeshUI.cs
++++ b/TMPro/TMP_SubMeshUI.cs
+@@ -398,10 +398,5 @@ namespace TMPro
+ 			m_padding = GetPaddingForMaterial();
+ 			SetMaterialDirty();
+ 		}
+-
+-		virtual int ITextElement.GetInstanceID()
+-		{
+-			return GetInstanceID();
+-		}
+ 	}
+ }
+diff --git a/TMPro/TextMeshPro.cs b/TMPro/TextMeshPro.cs
+index ee70cb94..f5988d6c 100644
+--- a/TMPro/TextMeshPro.cs
++++ b/TMPro/TextMeshPro.cs
+@@ -2744,30 +2744,5 @@ namespace TMPro
+ 			}
+ 			m_isCalculateSizeRequired = false;
+ 		}
+-
+-		virtual float ILayoutElement.get_minWidth()
+-		{
+-			return base.minWidth;
+-		}
+-
+-		virtual float ILayoutElement.get_flexibleWidth()
+-		{
+-			return base.flexibleWidth;
+-		}
+-
+-		virtual float ILayoutElement.get_minHeight()
+-		{
+-			return base.minHeight;
+-		}
+-
+-		virtual float ILayoutElement.get_flexibleHeight()
+-		{
+-			return base.flexibleHeight;
+-		}
+-
+-		virtual int ILayoutElement.get_layoutPriority()
+-		{
+-			return base.layoutPriority;
+-		}
+ 	}
+ }
+diff --git a/TMPro/TextMeshProUGUI.cs b/TMPro/TextMeshProUGUI.cs
+index f88edc00..7f64c0a2 100644
+--- a/TMPro/TextMeshProUGUI.cs
++++ b/TMPro/TextMeshProUGUI.cs
+@@ -2644,30 +2644,5 @@ namespace TMPro
+ 		{
+ 			LoadFontAsset();
+ 		}
+-
+-		virtual float ILayoutElement.get_minWidth()
+-		{
+-			return base.minWidth;
+-		}
+-
+-		virtual float ILayoutElement.get_flexibleWidth()
+-		{
+-			return base.flexibleWidth;
+-		}
+-
+-		virtual float ILayoutElement.get_minHeight()
+-		{
+-			return base.minHeight;
+-		}
+-
+-		virtual float ILayoutElement.get_flexibleHeight()
+-		{
+-			return base.flexibleHeight;
+-		}
+-
+-		virtual int ILayoutElement.get_layoutPriority()
+-		{
+-			return base.layoutPriority;
+-		}
+ 	}
+ }
+diff --git a/UniRx/Observable.cs b/UniRx/Observable.cs
+index b80c5c87..02e42171 100644
+--- a/UniRx/Observable.cs
++++ b/UniRx/Observable.cs
+@@ -1758,7 +1758,7 @@ namespace UniRx
+ 					}
+ 					finally
+ 					{
+-						((_003CWrapEnumerator_003Ec__Iterator17)this)._003C_003E__Finally0();
++						//((_003CWrapEnumerator_003Ec__Iterator17)this)._003C_003E__Finally0();
+ 					}
+ 					yield break;
+ 				}
+@@ -1794,7 +1794,7 @@ namespace UniRx
+ 			}
+ 			finally
+ 			{
+-				((_003CWrapEnumerator_003Ec__Iterator17)this)._003C_003E__Finally1();
++				//((_003CWrapEnumerator_003Ec__Iterator17)this)._003C_003E__Finally1();
+ 			}
+ 		}
+ 
+@@ -1828,7 +1828,7 @@ namespace UniRx
+ 					}
+ 					finally
+ 					{
+-						((_003CWrapEnumeratorYieldValue_003Ec__Iterator18<T>)this)._003C_003E__Finally0();
++						//((_003CWrapEnumeratorYieldValue_003Ec__Iterator18<T>)this)._003C_003E__Finally0();
+ 					}
+ 					yield break;
+ 				}
+@@ -1875,7 +1875,7 @@ namespace UniRx
+ 			}
+ 			finally
+ 			{
+-				((_003CWrapEnumeratorYieldValue_003Ec__Iterator18<T>)this)._003C_003E__Finally1();
++				//((_003CWrapEnumeratorYieldValue_003Ec__Iterator18<T>)this)._003C_003E__Finally1();
+ 			}
+ 		}
+ 
+diff --git a/UniRx/ObserveExtensions.cs b/UniRx/ObserveExtensions.cs
+index 996ae989..bdfe3c93 100644
+--- a/UniRx/ObserveExtensions.cs
++++ b/UniRx/ObserveExtensions.cs
+@@ -52,7 +52,7 @@ namespace UniRx
+ 					}
+ 					finally
+ 					{
+-						((_003CPublishPocoValueChanged_003Ec__Iterator2C<TSource, TProperty>)this)._003C_003E__Finally0();
++						//((_003CPublishPocoValueChanged_003Ec__Iterator2C<TSource, TProperty>)this)._003C_003E__Finally0();
+ 					}
+ 					if (isFirst || !comparer.Equals(currentValue, prevValue))
+ 					{
+diff --git a/UniRx/Operators/DelayFrameObservable.cs b/UniRx/Operators/DelayFrameObservable.cs
+index 77884018..5dc2e062 100644
+--- a/UniRx/Operators/DelayFrameObservable.cs
++++ b/UniRx/Operators/DelayFrameObservable.cs
+@@ -57,7 +57,7 @@ namespace UniRx.Operators
+ 					}
+ 					finally
+ 					{
+-						((_003COnCompletedDelay_003Ec__Iterator2F)(object)this)._003C_003E__Finally0();
++						//((_003COnCompletedDelay_003Ec__Iterator2F)(object)this)._003C_003E__Finally0();
+ 					}
+ 				}
+ 			}
+diff --git a/UniRx/PresenterBase.cs b/UniRx/PresenterBase.cs
+index a2c631e7..52869d2a 100644
+--- a/UniRx/PresenterBase.cs
++++ b/UniRx/PresenterBase.cs
+@@ -180,10 +180,5 @@ namespace UniRx
+ 			}
+ 			presenter.StartCapturePhase();
+ 		}
+-
+-		virtual GameObject IPresenter.get_gameObject()
+-		{
+-			return base.gameObject;
+-		}
+ 	}
+ }
+diff --git a/UnityTest/TestComponent.cs b/UnityTest/TestComponent.cs
+index c06ffff8..d4d5eb02 100644
+--- a/UnityTest/TestComponent.cs
++++ b/UnityTest/TestComponent.cs
+@@ -433,10 +433,5 @@ namespace UnityTest
+ 		{
+ 			return !(a == b);
+ 		}
+-
+-		virtual GameObject ITestComponent.get_gameObject()
+-		{
+-			return base.gameObject;
+-		}
+ 	}
+ }
+-- 
+2.18.0.windows.1
+

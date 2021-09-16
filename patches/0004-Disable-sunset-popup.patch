@@ -1,0 +1,29 @@
+From 973dc3c5e9f4c301ed97dc5adcdef9a7908883c4 Mon Sep 17 00:00:00 2001
+From: Justyn <egot@istic.pw>
+Date: Thu, 16 Sep 2021 05:13:11 -0500
+Subject: [PATCH] Disable sunset popup
+
+
+diff --git a/SunsetPopup.cs b/SunsetPopup.cs
+index d698afba..eed79ed6 100644
+--- a/SunsetPopup.cs
++++ b/SunsetPopup.cs
+@@ -44,6 +44,7 @@ public class SunsetPopup : MonoBehaviour
+ 
+ 	public void Init(Action onDisabled)
+ 	{
++		/*
+ 		disposable.Dispose();
+ 		this.onDisabled = onDisabled;
+ 		disposable = (from ev in PlatformController.PlayFab.EventStream<PlayFabPlatformEventTitleData>()
+@@ -53,6 +54,7 @@ public class SunsetPopup : MonoBehaviour
+ 			OnDataReceived(x);
+ 		});
+ 		PlatformController.PlayFab.GetTitleData(TitleDataKey);
++		*/
+ 	}
+ 
+ 	private void OnDataReceived(PlayFabPlatformEventTitleData data)
+-- 
+2.18.0.windows.1
+

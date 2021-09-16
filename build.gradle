@@ -1,0 +1,138 @@
+import net.minecrell.gitpatcher.Git
+import net.minecrell.gitpatcher.task.UpdateSubmodulesTask
+
+plugins {
+    id 'net.minecrell.gitpatcher' version '0.9.0'
+}
+
+def dataDir = file('data')
+def assemblyName = 'Assembly-CSharp.dll'
+def assemblyDir = 'idle-adventures_Data/Managed/'
+def assemblyPath =  assemblyDir + assemblyName
+def freshAssembly = new File(dataDir, assemblyPath)
+def submoduleName = 'srcBase'
+def baseDir = file(submoduleName)
+def srcDir = file('src')
+def projectFile = new File(srcDir, 'Assembly-CSharp.csproj')
+def patchesDir = file('patches')
+def binDir = new File(srcDir, 'bin')
+def objDir = new File(srcDir, 'obj')
+def buildDir = file('build')
+def buildAssemblyDir = new File(buildDir, assemblyDir)
+
+patches {
+    submodule submoduleName // Input
+    target srcDir           // Output
+    patches patchesDir      // Patches
+}
+
+class CustomSubmodulesTask extends UpdateSubmodulesTask {
+    private String newRef
+
+    @TaskAction
+    void updateSubmodules() {
+        def git = new Git(new File(repo, submodule))
+        def result = git.ref
+
+        this.newRef = result[1 .. result.indexOf(' ', 1) - 1]
+
+        if (result.startsWith(' ')) {
+            didWork = false
+            return
+        }
+    }
+
+    String getRef() {
+        newRef
+    }
+}
+
+tasks.remove(updateSubmodules)
+task('updateSubmodules', type: CustomSubmodulesTask, dependsOn: 'findGit')
+
+applyPatches.with {
+    it.dependsOn 'setup'
+}
+
+task clean(type: Delete) {
+  delete binDir, objDir, buildDir
+  followSymlinks = false
+}
+
+task cleanDecompile(type: Delete) {
+  delete baseDir
+  followSymlinks = false
+}
+
+task setup {
+    inputs.file(freshAssembly)
+    outputs.dir(baseDir)
+    outputs.upToDateWhen {
+        new File(baseDir, '.git').exists()
+    }
+
+	doLast {
+        delete baseDir
+
+        if (!freshAssembly.exists()) {
+            throw new Error('Could not find Assembly-CSharp.dll, please copy the contents of idle-adventures_Data/Managed to bin/')
+        }
+
+        [baseDir, patchesDir, buildDir].each {
+            if (!it.exists()) it.mkdir()
+        }
+
+        it.logger.info('Decompiling...')
+        exec {
+            executable 'ilspycmd'
+            args '-p', '-o', baseDir, '-r', new File(dataDir, assemblyDir), '-lv', 'CSharp4', freshAssembly
+        }
+
+        exec {
+            executable 'git'
+            args 'init'
+            workingDir baseDir
+        }
+
+        exec {
+            executable 'git'
+            args 'config', '--local', 'commit.gpgsign', 'false'
+            workingDir baseDir
+        }
+
+        exec {
+            executable 'git'
+            args 'add', '-A'
+            workingDir baseDir
+        }
+
+        exec {
+            executable 'git'
+            args 'commit', '-q', '-m', 'Initial commit'
+            workingDir baseDir
+        }
+    }
+}
+
+task build {
+    inputs.dir(srcDir)
+    outputs.dir(buildDir)
+
+    doLast {
+        exec {
+            executable 'msbuild'
+            args '/p:Configuration=Release', '/t:Restore,Build', '/p:OutputPath=' + binDir, projectFile
+        }
+
+        copy {
+            from dataDir
+            into buildDir
+            exclude assemblyPath
+        }
+
+        copy {
+            from new File(binDir, assemblyName)
+            into buildAssemblyDir
+        }
+    }
+}

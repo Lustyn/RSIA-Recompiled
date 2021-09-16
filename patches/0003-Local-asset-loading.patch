@@ -1,0 +1,59 @@
+From 8fccc255ee55e763c371607aec2e29ee970d2f47 Mon Sep 17 00:00:00 2001
+From: Justyn <egot@istic.pw>
+Date: Thu, 16 Sep 2021 03:14:20 -0500
+Subject: [PATCH] Local asset loading
+
+
+diff --git a/AssetBundleService.cs b/AssetBundleService.cs
+index f5be4c22..d112cb84 100644
+--- a/AssetBundleService.cs
++++ b/AssetBundleService.cs
+@@ -1,4 +1,3 @@
+-using System;
+ using System.Collections;
+ using System.Collections.Generic;
+ using AssetBundles;
+@@ -14,7 +13,7 @@ public class AssetBundleService : MonoBehaviour
+ 
+ 	private IEnumerator Start()
+ 	{
+-		UnityEngine.Object.DontDestroyOnLoad(base.gameObject);
++		Object.DontDestroyOnLoad(base.gameObject);
+ 		Debug.LogFormat("[ABM] Caching details {0}|{1}|{2}|{3}|{4}|{5}|{6}", Caching.enabled, Caching.compressionEnabled, Caching.expirationDelay, Caching.maximumAvailableDiskSpace, Caching.ready, Caching.spaceFree, Caching.spaceOccupied);
+ 		while (!Caching.ready)
+ 		{
+@@ -36,29 +35,8 @@ public class AssetBundleService : MonoBehaviour
+ 
+ 	private void InitializeSourceURL()
+ 	{
+-		IObservable<PlayFabPlatformEventTitleData> left = from data in PlatformController.PlayFab.EventStream<PlayFabPlatformEventTitleData>()
+-			where data.Id.Contains("assetBundleVersion2")
+-			select data;
+-		IObservable<PlayFabPlatformEventUserData> right = from data in PlatformController.PlayFab.EventStream<PlayFabPlatformEventUserData>()
+-			where data.DataType == PlayFabPlatformEventUserData.UserDataType.ReadOnly && data.Id == "assetBundleVersion2"
+-			select data;
+-		left.Zip(right, (PlayFabPlatformEventTitleData l, PlayFabPlatformEventUserData r) => new Tuple<string, string>(l.Data, r.Data.Value)).Take(1).Subscribe(delegate(Tuple<string, string> data)
+-		{
+-			string text = ((!string.IsNullOrEmpty(data.Item2)) ? data.Item2 : data.Item1);
+-			if (text.StartsWith("{", StringComparison.InvariantCulture))
+-			{
+-				text = GetBundlePath(text);
+-			}
+-			AssetBundleManager.SetSourceAssetBundleURL(string.Format("https://hyperhippo.ssl.hwcdn.net/idle-adventures/{0}", text));
+-			StartCoroutine(Initialize());
+-		})
+-			.AddTo(base.gameObject);
+-		PlatformController.PlayFab.IsLoggedIn.Where((bool b) => b).Take(1).Subscribe(delegate
+-		{
+-			PlatformController.PlayFab.GetTitleData("assetBundleVersion2");
+-			PlatformController.PlayFab.GetUserReadOnlyData(PlatformController.PlayFab.PlayFabId.Value, "assetBundleVersion2");
+-		})
+-			.AddTo(base.gameObject);
++		AssetBundleManager.SetSourceAssetBundleDirectory("/" + Utility.GetPlatformName() + "/");
++		StartCoroutine(Initialize());
+ 	}
+ 
+ 	private string GetBundlePath(string rawData)
+-- 
+2.18.0.windows.1
+
