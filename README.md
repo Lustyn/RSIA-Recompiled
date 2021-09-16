@@ -48,3 +48,15 @@ Next, build the game:
     gradlew build
 
 The final game data will be copied to the `build` directory. Simply copy this over your Steam installation or use your favorite █████ ████████.
+
+## Contributing
+
+Should you want to contribute patches, you can follow these steps:
+
+1. Apply fresh patches using `gradlew applyPatches`.
+2. Make your changes in `src`.
+3. Build and test your changes using `gradlew build`.
+4. Once your changes are finalized, make commits in the `src` subrepository to be made into patches.
+5. Generate patches for your commits using `gradlew makePatches`.
+6. Commit your patches to the parent repository in your own fork.
+7. Pull Request your changes!
