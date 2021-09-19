@@ -1,4 +1,4 @@
-From 2d15324f85aa6dcffe23d36c9355b08ccff298fc Mon Sep 17 00:00:00 2001
+From 9a0ec60b8a1ffeeb6aac7eb82d78f36f37c23d6f Mon Sep 17 00:00:00 2001
 From: Justyn <egot@istic.pw>
 Date: Wed, 15 Sep 2021 23:33:42 -0500
 Subject: [PATCH] Fix errors
@@ -6,13 +6,13 @@ Subject: [PATCH] Fix errors
 
 diff --git a/.gitignore b/.gitignore
 new file mode 100644
-index 00000000..cbbd0b5c
+index 00000000..03c9b935
 --- /dev/null
 +++ b/.gitignore
-@@ -0,0 +1,2 @@
+@@ -0,0 +1,3 @@
 +bin/
 +obj/
-\ No newline at end of file
++.vs/
 diff --git a/TMPro/TMP_InputField.cs b/TMPro/TMP_InputField.cs
 index 288edbd8..dade95fd 100644
 --- a/TMPro/TMP_InputField.cs

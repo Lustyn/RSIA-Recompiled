@@ -2,7 +2,7 @@ import net.minecrell.gitpatcher.Git
 import net.minecrell.gitpatcher.task.UpdateSubmodulesTask
 
 plugins {
-    id 'net.minecrell.gitpatcher' version '0.9.0'
+	id 'net.minecrell.gitpatcher' version '0.9.0'
 }
 
 def dataDir = file('data')
@@ -21,38 +21,29 @@ def buildDir = file('build')
 def buildAssemblyDir = new File(buildDir, assemblyDir)
 
 patches {
-    submodule submoduleName // Input
-    target srcDir           // Output
-    patches patchesDir      // Patches
+	submodule submoduleName	// Input
+	target srcDir			// Output
+	patches patchesDir		// Patches
 }
 
 class CustomSubmodulesTask extends UpdateSubmodulesTask {
-    private String newRef
+	private String newRef
 
-    @TaskAction
-    void updateSubmodules() {
-        def git = new Git(new File(repo, submodule))
-        def result = git.ref
+	@TaskAction
+	void updateSubmodules() {
+		def git = new Git(new File(repo, submodule))
 
-        this.newRef = result[1 .. result.indexOf(' ', 1) - 1]
+		this.newRef = git.ref
+	}
 
-        if (result.startsWith(' ')) {
-            didWork = false
-            return
-        }
-    }
-
-    String getRef() {
-        newRef
-    }
+	@Override
+	String getRef() {
+		newRef
+	}
 }
 
 tasks.remove(updateSubmodules)
-task('updateSubmodules', type: CustomSubmodulesTask, dependsOn: 'findGit')
-
-applyPatches.with {
-    it.dependsOn 'setup'
-}
+task(updateSubmodules, type: CustomSubmodulesTask, dependsOn: findGit)
 
 task clean(type: Delete) {
   delete binDir, objDir, buildDir
@@ -65,74 +56,78 @@ task cleanDecompile(type: Delete) {
 }
 
 task setup {
-    inputs.file(freshAssembly)
-    outputs.dir(baseDir)
-    outputs.upToDateWhen {
-        new File(baseDir, '.git').exists()
-    }
+	inputs.file(freshAssembly)
+	outputs.dir(baseDir)
+	outputs.upToDateWhen {
+		new File(baseDir, '.git').exists()
+	}
 
 	doLast {
-        delete baseDir
+		delete baseDir
 
-        if (!freshAssembly.exists()) {
-            throw new Error('Could not find Assembly-CSharp.dll, please copy the contents of idle-adventures_Data/Managed to bin/')
-        }
+		if (!freshAssembly.exists()) {
+			throw new Error('Could not find Assembly-CSharp.dll, please copy the contents of idle-adventures_Data/Managed to bin/')
+		}
 
-        [baseDir, patchesDir, buildDir].each {
-            if (!it.exists()) it.mkdir()
-        }
+		[baseDir, patchesDir, buildDir].each {
+			if (!it.exists()) it.mkdir()
+		}
 
-        it.logger.info('Decompiling...')
-        exec {
-            executable 'ilspycmd'
-            args '-p', '-o', baseDir, '-r', new File(dataDir, assemblyDir), '-lv', 'CSharp4', freshAssembly
-        }
+		it.logger.info('Decompiling...')
+		exec {
+			executable 'ilspycmd'
+			args '-p', '-o', baseDir, '-r', new File(dataDir, assemblyDir), '-lv', 'CSharp4', freshAssembly
+		}
 
-        exec {
-            executable 'git'
-            args 'init'
-            workingDir baseDir
-        }
+		exec {
+			executable 'git'
+			args 'init'
+			workingDir baseDir
+		}
 
-        exec {
-            executable 'git'
-            args 'config', '--local', 'commit.gpgsign', 'false'
-            workingDir baseDir
-        }
+		exec {
+			executable 'git'
+			args 'config', '--local', 'commit.gpgsign', 'false'
+			workingDir baseDir
+		}
 
-        exec {
-            executable 'git'
-            args 'add', '-A'
-            workingDir baseDir
-        }
+		exec {
+			executable 'git'
+			args 'add', '-A'
+			workingDir baseDir
+		}
 
-        exec {
-            executable 'git'
-            args 'commit', '-q', '-m', 'Initial commit'
-            workingDir baseDir
-        }
-    }
+		exec {
+			executable 'git'
+			args 'commit', '-q', '-m', 'Initial commit'
+			workingDir baseDir
+		}
+	}
+}
+
+applyPatches.with {
+	it.dependsOn setup
 }
 
 task build {
-    inputs.dir(srcDir)
-    outputs.dir(buildDir)
+	inputs.dir(srcDir)
+	outputs.dir(buildDir)
 
-    doLast {
-        exec {
-            executable 'msbuild'
-            args '/p:Configuration=Release', '/t:Restore,Build', '/p:OutputPath=' + binDir, projectFile
-        }
+	doLast {
+		exec {
+			executable 'msbuild'
+			args '/p:Configuration=Release', '/t:Restore,Build', '/p:OutputPath=' + binDir, projectFile
+		}
 
-        copy {
-            from dataDir
-            into buildDir
-            exclude assemblyPath
-        }
+		copy {
+			from dataDir
+			into buildDir
+			exclude assemblyPath
+		}
 
-        copy {
-            from new File(binDir, assemblyName)
-            into buildAssemblyDir
-        }
-    }
+		copy {
+			from new File(binDir, assemblyName)
+			into buildAssemblyDir
+		}
+	}
 }
