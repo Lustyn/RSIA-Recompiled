@@ -12,7 +12,6 @@ This repository does not redistribute the games code or assets[^2], and merely a
 
 Firstly, I'd ask nicely that you *don't* attempt to immediately take this repo down, as it is not intended to and will not affect your business. You can contact me via the email found on my [GitHub](https://github.com/Lustyn). I would be happy to talk through this project and why I believe this game history relic should be available offline.
 
-## Footnotes
 
 [^1]: I am not a lawyer and this is not legal advice.
 
