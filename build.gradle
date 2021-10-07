@@ -55,6 +55,13 @@ task cleanDecompile(type: Delete) {
   followSymlinks = false
 }
 
+task downloadAssets {
+	exec {
+		executable 'wget'
+		args '-nH', '-x', '--cut-dirs', '3', '-P', 'data/idle-adventures_Data/StreamingAssets', '-i', 'ASSETS-0.1.9.txt'
+	}
+}
+
 task setup {
 	inputs.file(freshAssembly)
 	outputs.dir(baseDir)

@@ -11,6 +11,7 @@ Building this project requires you have the following tools installed and added 
 - [💾 `ilspycmd`](https://github.com/icsharpcode/ILSpy/tree/master/ICSharpCode.Decompiler.Console) (tested with version 7.1.0.0)
 - [💾 `git`](https://git-scm.com/)
 - [💾 `Visual Studio / msbuild`](https://visualstudio.microsoft.com/) (tested with VS2019)
+- `wget` (optional, [💾 `Windows`](https://community.chocolatey.org/packages/Wget) / [💾 `Linux`](https://www.gnu.org/software/wget/))
 
 ## Preparations ([Why?](LEGAL.md))
 
@@ -35,7 +36,11 @@ The files should be placed in the project directory like so:
     │  │  │  ├─ scenes/
     │  │  │  ├─ win32
 
-Note that the StreamingAssets directory does not usually exist, you will have to create it and drop in the assets you acquired from the CDN.
+If you have `wget` installed, you can download the assets automatically using the following command:
+
+    gradlew downloadAssets
+
+Alternatively, you can download the assets manually and place them in the `data` directory as instructed above.
 
 ## Building
 
